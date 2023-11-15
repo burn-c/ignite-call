@@ -18,4 +18,15 @@ export const FormAnnotation = styled('div', {
   [`> ${Text}`]: {
     color: '$gray400',
   },
+
+  variants: {
+    hasError: {
+      true: {
+        [`> ${Text}`]: {
+          color: '#F75A68',
+          fontWeight: '$medium',
+        },
+      },
+    },
+  },
 })

@@ -45,7 +45,7 @@ export function ClaimUsernameForm() {
           <ArrowRight />
         </Button>
       </Form>
-      <FormAnnotation>
+      <FormAnnotation hasError={!!errors.username}>
         <Text size={'sm'}>
           {errors.username
             ? errors.username.message
