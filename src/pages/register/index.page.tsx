@@ -10,8 +10,9 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { ArrowRight } from 'phosphor-react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { Container, Form, FormError, Header } from './styles'
+import { api } from '@/src/lib/axios'
 
 const registerFormSchema = z.object({
   username: z
@@ -36,8 +37,6 @@ export default function Register() {
     resolver: zodResolver(registerFormSchema),
   })
 
-  const router = useRouter()
-
   const query = useSearchParams()
 
   useEffect(() => {
@@ -49,7 +48,14 @@ export default function Register() {
   }, [query, setValue])
 
   async function handleRegister(data: RegisterFormData) {
-    console.log(data)
+    try {
+      await api.post('/users', {
+        name: data.name,
+        username: data.username,
+      })
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   return (
