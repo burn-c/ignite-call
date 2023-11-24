@@ -10,7 +10,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { ArrowRight } from 'phosphor-react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Container, Form, FormError, Header } from './styles'
 import { api } from '@/src/lib/axios'
 import { AxiosError } from 'axios'
@@ -38,6 +38,8 @@ export default function Register() {
     resolver: zodResolver(registerFormSchema),
   })
 
+  const router = useRouter()
+
   const query = useSearchParams()
 
   useEffect(() => {
@@ -54,6 +56,8 @@ export default function Register() {
         name: data.name,
         username: data.username,
       })
+
+      await router.push('/register/connect-calendar')
     } catch (error) {
       if (error instanceof AxiosError && error?.response?.data?.message) {
         alert(error.response.data.message)
