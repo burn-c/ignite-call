@@ -10,7 +10,7 @@ import { z } from 'zod'
 import { ArrowRight } from 'phosphor-react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { getWeekDays } from '@/src/utils/get-week-days'
-import { Container, Header } from '../styles'
+import { Container, FormError, Header } from '../styles'
 import {
   IntervalBox,
   IntervalContainer,
@@ -18,9 +18,49 @@ import {
   IntervalInputs,
   IntervalItem,
 } from './styles'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { convertTimeStringToMinutes } from '@/src/utils/convert-time-string-to-minuts'
 
-const timeIntervalsFromSchema = z.object({})
+const timeIntervalsFromSchema = z.object({
+  intervals: z
+    .array(
+      z.object({
+        weekDay: z.number().min(0).max(6),
+        enabled: z.boolean(),
+        startTime: z.string(),
+        endTime: z.string(),
+      }),
+    )
+    .length(7)
+    .transform((intervals) => intervals.filter((interval) => interval.enabled))
+    .refine((intervals) => intervals.length > 0, {
+      message: 'Você precisa selecionar pelo menos um dia da semana!',
+    })
+    .transform((intervals) => {
+      return intervals.map((interval) => {
+        return {
+          weekDay: interval.weekDay,
+          startTimeInMinuts: convertTimeStringToMinutes(interval.startTime),
+          endTimeInMinuts: convertTimeStringToMinutes(interval.endTime),
+        }
+      })
+    })
+    .refine(
+      (intervals) => {
+        return intervals.every(
+          (interval) =>
+            interval.endTimeInMinuts - 60 >= interval.startTimeInMinuts,
+        )
+      },
+      {
+        message:
+          'O horário de término deve ser pelo menos 1 hora distante do de início!',
+      },
+    ),
+})
 
+type TimeIntervalsFormInput = z.input<typeof timeIntervalsFromSchema>
+type TimeIntervalsFormOutput = z.output<typeof timeIntervalsFromSchema>
 export default function TimeIntervals() {
   const {
     register,
@@ -28,7 +68,8 @@ export default function TimeIntervals() {
     control,
     watch,
     formState: { isSubmitting, errors },
-  } = useForm({
+  } = useForm<TimeIntervalsFormInput, any, TimeIntervalsFormOutput>({
+    resolver: zodResolver(timeIntervalsFromSchema),
     defaultValues: {
       intervals: [
         { weekDay: 0, enabled: false, startTime: '08:00', endTime: '18:00' },
@@ -51,7 +92,9 @@ export default function TimeIntervals() {
 
   const intervals = watch('intervals')
 
-  async function handleSetTimeIntervls() {}
+  async function handleSetTimeIntervals(data: TimeIntervalsFormOutput) {
+    console.log(data)
+  }
 
   return (
     <Container>
@@ -65,7 +108,7 @@ export default function TimeIntervals() {
         <MultiStep size={4} currentStep={3} />
       </Header>
 
-      <IntervalBox as="form" onSubmit={handleSubmit(handleSetTimeIntervls)}>
+      <IntervalBox as="form" onSubmit={handleSubmit(handleSetTimeIntervals)}>
         <IntervalContainer>
           {fields.map((field, index) => {
             return (
@@ -109,7 +152,11 @@ export default function TimeIntervals() {
           })}
         </IntervalContainer>
 
-        <Button type="submit">
+        {errors.intervals && (
+          <FormError size={'sm'}>{errors.intervals.message}</FormError>
+        )}
+
+        <Button type="submit" disabled={isSubmitting}>
           Próximo passo
           <ArrowRight />
         </Button>
