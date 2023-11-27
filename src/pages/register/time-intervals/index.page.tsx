@@ -20,6 +20,7 @@ import {
 } from './styles'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { convertTimeStringToMinutes } from '@/src/utils/convert-time-string-to-minuts'
+import { api } from '@/src/lib/axios'
 
 const timeIntervalsFromSchema = z.object({
   intervals: z
@@ -40,8 +41,8 @@ const timeIntervalsFromSchema = z.object({
       return intervals.map((interval) => {
         return {
           weekDay: interval.weekDay,
-          startTimeInMinuts: convertTimeStringToMinutes(interval.startTime),
-          endTimeInMinuts: convertTimeStringToMinutes(interval.endTime),
+          startTimeInMinutes: convertTimeStringToMinutes(interval.startTime),
+          endTimeInMinutes: convertTimeStringToMinutes(interval.endTime),
         }
       })
     })
@@ -49,7 +50,7 @@ const timeIntervalsFromSchema = z.object({
       (intervals) => {
         return intervals.every(
           (interval) =>
-            interval.endTimeInMinuts - 60 >= interval.startTimeInMinuts,
+            interval.endTimeInMinutes - 60 >= interval.startTimeInMinutes,
         )
       },
       {
@@ -68,7 +69,7 @@ export default function TimeIntervals() {
     control,
     watch,
     formState: { isSubmitting, errors },
-  } = useForm<TimeIntervalsFormInput, any, TimeIntervalsFormOutput>({
+  } = useForm<TimeIntervalsFormInput>({
     resolver: zodResolver(timeIntervalsFromSchema),
     defaultValues: {
       intervals: [
@@ -85,6 +86,7 @@ export default function TimeIntervals() {
 
   const weekDays = getWeekDays()
 
+  // Hook para manipular com um conjunto de dados, podendo configurar um formulário de tamanho dinâmico
   const { fields } = useFieldArray({
     control,
     name: 'intervals',
@@ -92,8 +94,9 @@ export default function TimeIntervals() {
 
   const intervals = watch('intervals')
 
-  async function handleSetTimeIntervals(data: TimeIntervalsFormOutput) {
-    console.log(data)
+  async function handleSetTimeIntervals(data: any) {
+    const { intervals } = data as TimeIntervalsFormOutput
+    await api.post('/users/time-intervals', intervals)
   }
 
   return (
