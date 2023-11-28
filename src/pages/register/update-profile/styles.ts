@@ -1,4 +1,4 @@
-import { Box, Text, styled } from '@lucasjohann-ignite-ui/react'
+import { Box, Text, TextArea, styled } from '@lucasjohann-ignite-ui/react'
 
 export const ProfileBox = styled(Box, {
   marginTop: '$6',
@@ -15,4 +15,16 @@ export const ProfileBox = styled(Box, {
 
 export const FormAnnotation = styled(Text, {
   color: '$gray200',
+
+  variants: {
+    hasError: {
+      true: {
+        color: '#F75A68',
+      },
+    },
+  },
+})
+
+export const BioTextArea = styled(TextArea, {
+  resize: 'none',
 })

@@ -1,9 +1,9 @@
 import {
+  Avatar,
   Button,
   Heading,
   MultiStep,
   Text,
-  TextArea,
 } from '@lucasjohann-ignite-ui/react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -13,11 +13,15 @@ import { getServerSession } from 'next-auth'
 import { useSession } from 'next-auth/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Container, Header } from '../styles'
-import { FormAnnotation, ProfileBox } from './styles'
+import { BioTextArea, FormAnnotation, ProfileBox } from './styles'
 import { buildNextAuthOptions } from '../../api/auth/[...nextauth].api'
+import { api } from '@/src/lib/axios'
+import { useRouter } from 'next/navigation'
 
 const updateProfileSchema = z.object({
-  bio: z.string(),
+  bio: z.string().min(3, {
+    message: 'Sua bio não pode estar em branco!',
+  }),
 })
 
 type UpdateProfileData = z.infer<typeof updateProfileSchema>
@@ -26,14 +30,21 @@ export default function UpdateProfile() {
   const {
     register,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<UpdateProfileData>({
     resolver: zodResolver(updateProfileSchema),
   })
 
   const session = useSession()
+  const router = useRouter()
 
-  async function handleUpdateProfile(data: UpdateProfileData) {}
+  async function handleUpdateProfile(data: UpdateProfileData) {
+    await api.put('/users/profile', {
+      bio: data.bio,
+    })
+
+    await router.push(`/schedule/${session.data?.user.username}`)
+  }
 
   return (
     <Container>
@@ -44,19 +55,25 @@ export default function UpdateProfile() {
           editar essas informações depois.
         </Text>
 
-        <MultiStep size={4} currentStep={1} />
+        <MultiStep size={4} currentStep={4} />
       </Header>
 
       <ProfileBox as="form" onSubmit={handleSubmit(handleUpdateProfile)}>
         <label>
           <Text size={'sm'}>Foto de perfil</Text>
+          <Avatar
+            src={session.data?.user.avatar_url}
+            alt={session.data?.user.name}
+          />
         </label>
 
         <label>
           <Text size="sm">Sobre você</Text>
-          <TextArea {...register('bio')} />
-          <FormAnnotation size={'sm'}>
-            Fale um pouco sobre você. Isto será exibido em sua página pessoal.
+          <BioTextArea {...register('bio')} />
+          <FormAnnotation size={'sm'} hasError={!!errors.bio}>
+            {errors.bio
+              ? errors.bio.message
+              : 'Fale um pouco sobre você. Isto será exibido em sua página pessoal.'}
           </FormAnnotation>
         </label>
 
