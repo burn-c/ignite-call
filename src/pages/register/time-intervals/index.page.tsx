@@ -21,6 +21,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { convertTimeStringToMinutes } from '@/src/utils/convert-time-string-to-minuts'
 import { api } from '@/src/lib/axios'
+import { useRouter } from 'next/navigation'
 
 const timeIntervalsFromSchema = z.object({
   intervals: z
@@ -84,6 +85,8 @@ export default function TimeIntervals() {
     },
   })
 
+  const router = useRouter()
+
   const weekDays = getWeekDays()
 
   // Hook para manipular com um conjunto de dados, podendo configurar um formulário de tamanho dinâmico
@@ -94,9 +97,12 @@ export default function TimeIntervals() {
 
   const intervals = watch('intervals')
 
-  async function handleSetTimeIntervals(data: any) {
+  async function handleSetTimeIntervals(data: unknown) {
     const { intervals } = data as TimeIntervalsFormOutput
+
     await api.post('/users/time-intervals', intervals)
+
+    await router.push('/register/update-profile')
   }
 
   return (
