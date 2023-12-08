@@ -23,7 +23,7 @@ import { convertTimeStringToMinutes } from '@/src/utils/convert-time-string-to-m
 import { api } from '@/src/lib/axios'
 import { useRouter } from 'next/navigation'
 
-const timeIntervalsFromSchema = z.object({
+const timeIntervalsFormSchema = z.object({
   intervals: z
     .array(
       z.object({
@@ -61,8 +61,9 @@ const timeIntervalsFromSchema = z.object({
     ),
 })
 
-type TimeIntervalsFormInput = z.input<typeof timeIntervalsFromSchema>
-type TimeIntervalsFormOutput = z.output<typeof timeIntervalsFromSchema>
+type TimeIntervalsFormInput = z.input<typeof timeIntervalsFormSchema>
+type TimeIntervalsFormOutput = z.output<typeof timeIntervalsFormSchema>
+
 export default function TimeIntervals() {
   const {
     register,
@@ -71,7 +72,7 @@ export default function TimeIntervals() {
     watch,
     formState: { isSubmitting, errors },
   } = useForm<TimeIntervalsFormInput>({
-    resolver: zodResolver(timeIntervalsFromSchema),
+    resolver: zodResolver(timeIntervalsFormSchema),
     defaultValues: {
       intervals: [
         { weekDay: 0, enabled: false, startTime: '08:00', endTime: '18:00' },
@@ -97,10 +98,10 @@ export default function TimeIntervals() {
 
   const intervals = watch('intervals')
 
-  async function handleSetTimeIntervals(data: unknown) {
+  async function handleSetTimeIntervals(data: any) {
     const { intervals } = data as TimeIntervalsFormOutput
 
-    await api.post('/users/time-intervals', intervals)
+    await api.post('/users/time-intervals', { intervals })
 
     await router.push('/register/update-profile')
   }
